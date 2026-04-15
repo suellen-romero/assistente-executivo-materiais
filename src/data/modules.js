@@ -97,6 +97,15 @@ export const MODULES = [
         { type: "info", text: "Teste: espere 15s → mande 'oi' → feche o Terminal → espere 30s → mande outra mensagem" },
         { type: "command", label: "Reinício automático após reboot", cmd: `cat > ~/iniciar-assistente.sh << 'EOF'\n#!/bin/bash\nsleep 20\ntmux new-session -d -s assistente "while true; do cd ~/assistente-executivo && claude --dangerously-skip-permissions --channels plugin:telegram@claude-plugins-official; sleep 5; done"\nEOF\nchmod +x ~/iniciar-assistente.sh\n(crontab -l 2>/dev/null; echo "@reboot /home/assistente/iniciar-assistente.sh") | crontab -` },
       ]},
+      { title: "Reiniciar o agente (quando precisar)", steps: [
+        { type: "info", text: "Use este fluxo toda vez que você mudar algo estrutural: nova ferramenta, nova skill, edição de CLAUDE.md, edição de memória, ou quando o bot estiver travado." },
+        { type: "info", text: "No terminal do Mac (SSH na VPS):" },
+        { type: "command_dynamic", label: "1. Conectar na VPS", tpl: "ssh root@{vps_ip}", fb: "ssh root@SEU_IP_AQUI", req: "vps_ip" },
+        { type: "command", label: "2. Mudar pro usuário assistente", cmd: "su - assistente" },
+        { type: "command", label: "3. Matar a sessão atual", cmd: "tmux kill-session -t assistente 2>/dev/null" },
+        { type: "command", label: "4. Iniciar nova sessão", cmd: `tmux new-session -d -s assistente 'while true; do cd ~/assistente-executivo && source ~/.bashrc && claude --dangerously-skip-permissions --channels plugin:telegram@claude-plugins-official; sleep 5; done'`, note: "O source ~/.bashrc garante que variáveis de ambiente (ex: OPENAI_API_KEY do Whisper) fiquem disponíveis pro agente." },
+        { type: "info", text: "Teste: mande 'oi' no Telegram. O agente deve responder em poucos segundos." },
+      ]},
     ]}
   },
   { id: 3, icon: "3", title: "Segurança", phase: "install", color: "#C4423D", bg: "#FDF0EF",
