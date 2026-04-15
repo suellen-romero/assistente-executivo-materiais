@@ -1,1 +1,26 @@
-/* placeholder - replaced by Tailwind in next task */
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@layer base {
+  html {
+    font-family: Raleway, system-ui, sans-serif;
+    color: #1A1A1A;
+    background: #FFFFFF;
+  }
+  body {
+    font-size: 13px;
+    line-height: 1.5;
+  }
+  *:focus-visible {
+    outline: 2px solid #185FA5;
+    outline-offset: 2px;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  *, *::before, *::after {
+    animation-duration: 0.01ms !important;
+    transition-duration: 0.01ms !important;
+  }
+}
