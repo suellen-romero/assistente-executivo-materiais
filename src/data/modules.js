@@ -353,10 +353,31 @@ export const MODULES = [
       { title: "Bônus 2 — Reservas, check-in e lembretes", desc: "Check-in automático, lembretes antes da viagem, documentos organizados." },
     ]}
   },
-  { id: 12, icon: "B2", title: "50 casos de uso", phase: "bonus", color: "#C4423D", bg: "#FDF0EF",
-    content: { type: "blocks", desc: "40-50 cenários organizados por situação do dia a dia.", blocks: [
-      { title: "Guia de casos de uso", steps: [
-        { type: "download", label: "Guia completo — 50 casos de uso", file: "guia-50-casos-de-uso.pdf", desc: "Manhã, reuniões, análise, comunicação, pessoal, gestão" },
+  { id: 12, icon: "B2", title: "56 casos de uso", phase: "bonus", color: "#C4423D", bg: "#FDF0EF",
+    content: { type: "blocks", desc: "9 skills cobrindo 56 cenários do dia a dia. O agente instala automaticamente depois que você faz upload.", blocks: [
+      { title: "Baixar as skills", steps: [
+        { type: "download", label: "56 casos de uso (ZIP com 9 skills)", file: "casos-de-uso.zip", desc: "Manhã, reuniões, análise, decisão, comunicação, pesquisa, gestão de pessoas, reports de projetos, pessoal" },
+      ]},
+      { title: "Instalar no assistente", steps: [
+        { type: "info", text: "1. Baixe o ZIP acima e descompacte — você terá 9 arquivos .md" },
+        { type: "info", text: "2. No Telegram, mande os 9 arquivos .md pro seu assistente" },
+        { type: "info", text: "3. Peça: 'Instale essas skills na pasta ~/.claude/skills/ do seu ambiente e confirme quando terminar.'" },
+        { type: "info", text: "4. O assistente move cada arquivo pra pasta correta e registra as skills automaticamente" },
+        { type: "command", label: "Verificar se as skills foram instaladas (opcional)", cmd: "ls ~/.claude/skills/" },
+      ]},
+      { title: "Como usar no dia a dia", steps: [
+        { type: "info", text: "Depois de instaladas, as skills ficam disponíveis como contexto pro agente automaticamente." },
+        { type: "info", text: "Você não precisa 'chamar' uma skill. Quando você perguntar algo relacionado (ex: 'prepara minha reunião das 14h'), o agente usa a skill correspondente sem você pedir." },
+        { type: "info", text: "Exemplos de perguntas que acionam cada skill:" },
+        { type: "info", text: "→ manhã: 'me dá o briefing do dia'" },
+        { type: "info", text: "→ reuniões: 'prepara minha reunião das 15h'" },
+        { type: "info", text: "→ análise: 'analisa esse contrato'" },
+        { type: "info", text: "→ decisão: 'estou em dúvida entre A e B, me ajuda a decidir'" },
+        { type: "info", text: "→ comunicação: 'rascunha email pro fornecedor, firme mas cordial'" },
+        { type: "info", text: "→ pesquisa: 'pesquisa restaurante japonês pra jantar'" },
+        { type: "info", text: "→ gestão de pessoas: 'preciso dar feedback duro pro João'" },
+        { type: "info", text: "→ reports de projetos: 'como está o projeto X?'" },
+        { type: "info", text: "→ pessoal: 'me lembra de mandar flores toda sexta'" },
       ]},
     ]}
   },
