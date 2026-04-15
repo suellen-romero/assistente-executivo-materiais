@@ -24,7 +24,8 @@ describe('App integration', () => {
     const input = screen.getByLabelText(/IP da VPS/i)
     await user.type(input, '5.6.7.8')
 
-    expect(screen.getByText('ssh root@5.6.7.8')).toBeInTheDocument()
+    // ssh command appears in both "Conectar na VPS" and "Reiniciar o agente" blocks
+    expect(screen.getAllByText('ssh root@5.6.7.8').length).toBeGreaterThan(0)
   })
 
   it('Mac/Windows toggle switches OS-dependent text', async () => {
