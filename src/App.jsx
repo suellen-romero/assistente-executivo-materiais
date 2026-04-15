@@ -8,6 +8,7 @@ import OSToggle from './components/OSToggle.jsx'
 import Block from './components/Block.jsx'
 import LessonCard from './components/LessonCard.jsx'
 import NavFooter from './components/NavFooter.jsx'
+import BackToTop from './components/BackToTop.jsx'
 
 export default function App() {
   const [activeId, setActiveId] = useState(1)
@@ -28,7 +29,7 @@ export default function App() {
   }
 
   return (
-    <div className="max-w-content mx-auto p-4">
+    <div className="max-w-content mx-auto p-4 pb-20">
       <Header />
 
       <ModuleBar modules={MODULES} activeId={activeId} onChange={goTo} />
@@ -54,6 +55,8 @@ export default function App() {
       />
 
       <Footer />
+
+      <BackToTop />
     </div>
   )
 }
