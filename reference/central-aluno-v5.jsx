@@ -1,0 +1,343 @@
+import { useState } from "react";
+
+const PHASES = [
+  { id: "install", label: "Instalação e configuração" },
+  { id: "memory", label: "Memória e identidade" },
+  { id: "practice", label: "Uso na prática" },
+  { id: "bonus", label: "Bônus e extras" },
+];
+
+const MODULES = [
+  { id: 1, icon: "1", title: "Bem-vinda e contexto", phase: "install", color: "#C4423D", bg: "#FDF0EF",
+    content: { type: "lessons", lessons: [
+      { title: "Aula 1 — Boas-vindas e como esse curso funciona", desc: "Como usar estes materiais de apoio, o que esperar, ordem das aulas. Anote todas as senhas e tokens em um bloco de notas e depois transfira para um gerenciador de senhas seguro (1Password, Bitwarden, etc). Em caso de dúvidas técnicas: tire print do erro e cole no Claude para suporte." },
+      { title: "Aula 2 — Você não precisa saber tudo isso", desc: "Eliminar ansiedade. O que importa vs o que é ruído. Você não está atrasado." },
+      { title: "Aula 3 — Um pouco sobre IA", desc: "Conceitos básicos que você precisa saber. Esse campo muda rápido — as aulas técnicas serão atualizadas conforme necessário." },
+      { title: "Aula 4 — Um agente, muitas habilidades", desc: "Por que você NÃO precisa de 15 bots diferentes. Um assistente bem configurado resolve tudo. Skills, commands e contexto fazem a diferença." },
+    ]}
+  },
+  { id: 2, icon: "2", title: "Instalação do assistente", phase: "install", color: "#C4423D", bg: "#FDF0EF",
+    content: { type: "blocks", desc: "Contratar VPS, SSH, preparar servidor, instalar Claude Code, criar bot, parear, persistência 24/7.", blocks: [
+      { title: "Pré-requisitos", steps: [
+        { type: "info", text: "Conta no Claude.ai com plano Pro ou superior ($20/mês)" },
+        { type: "info", text: "Telegram instalado no celular" },
+        { type: "info", text: "Computador com Terminal" },
+        { type: "info", text: "Um bloco de notas para anotar IP, senhas e tokens durante a instalação" },
+        { type: "info", text: "Se usar plano Team/Enterprise: habilitar Channels antes em claude.ai → Settings → Claude Code → Canais" },
+      ]},
+      { title: "Contratar a VPS", steps: [
+        { type: "info", text: "Acesse hostinger.com.br/servidor-vps" },
+        { type: "info", text: "Escolha plano KVM 1 (R$29,99/mês)" },
+        { type: "info", text: "Sistema: Ubuntu 24.04 | Localização: Brazil — São Paulo" },
+        { type: "info", text: "Crie senha de root forte e anote no seu bloco de notas" },
+        { type: "info", text: "Anote o endereço IP que aparece no painel" },
+        { type: "input", label: "IP da VPS", placeholder: "cole aqui pra gerar os comandos abaixo", key: "vps_ip" },
+      ]},
+      { title: "Conectar na VPS", steps: [
+        { type: "warning", text: "Use o Terminal do computador, NÃO o terminal web da Hostinger. O terminal web mata processos quando fecha." },
+        { type: "info_os", mac: "Abra o app Terminal (Cmd+Espaço → 'Terminal')", win: "Abra o PowerShell (tecla Windows → 'PowerShell')" },
+        { type: "command_dynamic", label: "Conectar via SSH", tpl: "ssh root@{vps_ip}", fb: "ssh root@SEU_IP_AQUI", req: "vps_ip" },
+        { type: "info", text: "Se aparecer 'Are you sure?': digite yes e Enter" },
+        { type: "info", text: "A senha não aparece enquanto digita — é normal" },
+        { type: "command_dynamic", label: "Se der erro de host identification", tpl: "ssh-keygen -R {vps_ip}", fb: "ssh-keygen -R SEU_IP_AQUI", req: "vps_ip" },
+      ]},
+      { title: "Preparar o servidor", steps: [
+        { type: "command", label: "Atualizar e instalar dependências", cmd: "apt update && apt upgrade -y && apt install -y unzip git ffmpeg tmux curl python3-pip", note: "Se aparecer tela roxa, aperte Enter" },
+        { type: "command", label: "Instalar Node.js", cmd: "curl -fsSL https://deb.nodesource.com/setup_22.x | bash - && apt-get install -y nodejs" },
+        { type: "command", label: "Criar usuário assistente", cmd: 'adduser assistente --disabled-password --gecos ""', note: "Claude Code não funciona como root" },
+        { type: "command", label: "Configurar persistência", cmd: "loginctl enable-linger assistente" },
+        { type: "command", label: "Instalar Bun", cmd: 'su - assistente -c "curl -fsSL https://bun.sh/install | bash"' },
+      ]},
+      { title: "Instalar Claude Code", steps: [
+        { type: "command", label: "Configurar npm (1)", cmd: "mkdir -p /home/assistente/.npm-global && chown -R assistente:assistente /home/assistente/.npm-global" },
+        { type: "command", label: "Configurar npm (2)", cmd: `su - assistente -c "npm config set prefix '/home/assistente/.npm-global'"` },
+        { type: "command", label: "Configurar PATH", cmd: `su - assistente -c "echo 'export PATH=/home/assistente/.npm-global/bin:/home/assistente/.bun/bin:\\$PATH' >> ~/.bashrc"` },
+        { type: "command", label: "Instalar", cmd: `su - assistente -c "source ~/.bashrc && npm install -g @anthropic-ai/claude-code"` },
+        { type: "command", label: "Mudar pro usuário assistente", cmd: "su - assistente", note: "A partir daqui, tudo como assistente" },
+        { type: "command", label: "Verificar", cmd: 'echo "--- VERIFICAÇÃO ---" && node --version && bun --version && claude --version && echo "--- TUDO OK ---"' },
+      ]},
+      { title: "Autenticar Claude Code", steps: [
+        { type: "command", label: "Criar pasta e iniciar", cmd: "mkdir -p ~/assistente-executivo && cd ~/assistente-executivo && claude" },
+        { type: "info", text: "Tema: escolha Dark mode → Enter" },
+        { type: "info", text: "Login: escolha 'Claude account with subscription' → Enter" },
+        { type: "warning", text: "Link OAuth: o link é longo. Cmd+clique (Mac) pra abrir. Se não funcionar, alargue a janela, copie inteiro e cole no navegador." },
+        { type: "info", text: "'Login successful' → Enter → 'Security notes' → Enter → 'Trust folder' → Yes" },
+        { type: "command", label: "Testar", cmd: "Olá, tudo bem?" },
+        { type: "command", label: "Sair", cmd: "/exit" },
+      ]},
+      { title: "Criar bot no Telegram", steps: [
+        { type: "info", text: "No Telegram, busque @BotFather → Iniciar → /newbot" },
+        { type: "info", text: "Escolha nome (ex: Meu Assistente) e username (termina com bot)" },
+        { type: "info", text: "Anote o token no seu bloco de notas" },
+        { type: "info", text: "Busque @userinfobot e anote seu ID numérico" },
+        { type: "input", label: "Token do bot", placeholder: "cole aqui pra gerar o comando abaixo", key: "bot_token" },
+      ]},
+      { title: "Instalar plugin do Telegram", steps: [
+        { type: "command", label: "Ir pra pasta", cmd: "cd ~/assistente-executivo" },
+        { type: "command", label: "Adicionar marketplace", cmd: "claude plugin marketplace add anthropics/claude-plugins-official" },
+        { type: "command", label: "Instalar plugin", cmd: "claude plugin install telegram@claude-plugins-official" },
+        { type: "command", label: "Criar pasta de config", cmd: "mkdir -p ~/.claude/channels/telegram" },
+        { type: "command_dynamic", label: "Configurar token", tpl: "echo 'TELEGRAM_BOT_TOKEN={bot_token}' > ~/.claude/channels/telegram/.env", fb: "echo 'TELEGRAM_BOT_TOKEN=SEU_TOKEN_AQUI' > ~/.claude/channels/telegram/.env", req: "bot_token" },
+        { type: "command", label: "Proteger arquivo", cmd: "chmod 600 ~/.claude/channels/telegram/.env" },
+        { type: "command", label: "Verificar", cmd: "cat ~/.claude/channels/telegram/.env", note: "Confira caractere por caractere" },
+        { type: "command", label: "Limpar access.json", cmd: "rm -f ~/.claude/channels/telegram/access.json" },
+      ]},
+      { title: "Pareamento", steps: [
+        { type: "command", label: "Primeira inicialização", cmd: "cd ~/assistente-executivo && claude --dangerously-skip-permissions --channels plugin:telegram@claude-plugins-official", note: "'Yes, I accept'. Espere 'Listening...'" },
+        { type: "command", label: "Sair", cmd: "/exit" },
+        { type: "command", label: "Limpar e reiniciar (obrigatório)", cmd: "rm -f ~/.claude/channels/telegram/access.json && cd ~/assistente-executivo && claude --dangerously-skip-permissions --channels plugin:telegram@claude-plugins-official" },
+        { type: "info", text: "No Telegram: abra seu bot → Iniciar → mande 'oi' → copie o código de 6 caracteres" },
+        { type: "input", label: "Código", placeholder: "cole o código pra gerar o comando", key: "pair_code" },
+        { type: "command_dynamic", label: "Confirmar pareamento", tpl: "/telegram:access pair {pair_code}", fb: "/telegram:access pair CODIGO", req: "pair_code" },
+        { type: "info", text: "Escolha 'Yes' em todas as confirmações" },
+        { type: "command", label: "Trancar acesso", cmd: "/telegram:access policy allowlist" },
+        { type: "info", text: "Teste: mande 'olá, como você se chama?' no Telegram" },
+      ]},
+      { title: "Manter rodando 24/7", steps: [
+        { type: "command", label: "Sair do Claude Code", cmd: "/exit" },
+        { type: "command", label: "Iniciar modo persistente", cmd: `tmux new-session -d -s assistente "while true; do cd ~/assistente-executivo && claude --dangerously-skip-permissions --channels plugin:telegram@claude-plugins-official; sleep 5; done"` },
+        { type: "info", text: "Teste: espere 15s → mande 'oi' → feche o Terminal → espere 30s → mande outra mensagem" },
+        { type: "command", label: "Reinício automático após reboot", cmd: `cat > ~/iniciar-assistente.sh << 'EOF'\n#!/bin/bash\nsleep 20\ntmux new-session -d -s assistente "while true; do cd ~/assistente-executivo && claude --dangerously-skip-permissions --channels plugin:telegram@claude-plugins-official; sleep 5; done"\nEOF\nchmod +x ~/iniciar-assistente.sh\n(crontab -l 2>/dev/null; echo "@reboot /home/assistente/iniciar-assistente.sh") | crontab -` },
+      ]},
+    ]}
+  },
+  { id: 3, icon: "3", title: "Segurança", phase: "install", color: "#C4423D", bg: "#FDF0EF",
+    content: { type: "blocks", desc: "Firewall, proteção SSH, permissões, boas práticas.", blocks: [
+      { title: "Firewall (UFW)", steps: [
+        { type: "info", text: "Bloqueia todas as conexões de entrada exceto SSH. Sem isso, sua VPS está exposta." },
+        { type: "command", label: "Instalar e ativar", cmd: "sudo apt install -y ufw && sudo ufw default deny incoming && sudo ufw default allow outgoing && sudo ufw allow ssh && sudo ufw --force enable" },
+        { type: "command", label: "Verificar", cmd: "sudo ufw status" },
+      ]},
+      { title: "Proteção SSH (Fail2ban)", steps: [
+        { type: "info", text: "Bloqueia IPs que tentam adivinhar sua senha. Servidores recebem milhares de tentativas por dia." },
+        { type: "command", label: "Instalar e configurar", cmd: `sudo apt install -y fail2ban && sudo cat > /etc/fail2ban/jail.local << 'EOF'\n[sshd]\nenabled = true\nport = ssh\nfilter = sshd\nlogpath = /var/log/auth.log\nmaxretry = 5\nbantime = 3600\nfindtime = 600\nEOF\nsudo systemctl enable fail2ban && sudo systemctl restart fail2ban` },
+        { type: "command", label: "Verificar", cmd: "sudo fail2ban-client status sshd" },
+      ]},
+      { title: "Permissões de arquivos", steps: [
+        { type: "command", label: "Proteger .env do Telegram", cmd: "chmod 600 ~/.claude/channels/telegram/.env" },
+        { type: "command", label: "Proteger pasta de memória (após criar)", cmd: "chmod -R 700 ~/assistente-executivo/memoria/" },
+      ]},
+      { title: "Boas práticas", steps: [
+        { type: "warning", text: "Nunca coloque API keys, tokens ou senhas dentro de arquivos .md. Sempre use arquivos .env com chmod 600." },
+        { type: "info", text: "Anote todas as credenciais em um gerenciador de senhas (1Password, Bitwarden, etc)." },
+        { type: "info", text: "Seus dados passam pelos servidores da Anthropic. Decida conscientemente o que compartilhar." },
+        { type: "info", text: "Nunca envie pro assistente: senhas, dados bancários, números de cartão de crédito." },
+        { type: "info", text: "Pode enviar com cautela: dados financeiros da empresa, contratos, dados de clientes." },
+      ]},
+    ]}
+  },
+  { id: 4, icon: "4", title: "Ferramentas", phase: "install", color: "#C4423D", bg: "#FDF0EF",
+    content: { type: "blocks", desc: "Composio, Obsidian, Whisper e qualquer ferramenta que você quiser conectar.", blocks: [
+      { title: "Introdução", steps: [
+        { type: "info", text: "Ferramentas conectam seu assistente ao mundo real: email, agenda, documentos, voz." },
+        { type: "info", text: "Usamos o Composio porque é feito pra não-técnicos: cria a conexão em poucos cliques, sem código." },
+        { type: "info", text: "Cada ferramenta é instalada separadamente. Instale apenas as que você usa." },
+        { type: "info", text: "O processo é sempre o mesmo: criar MCP no Composio → adicionar na VPS → reiniciar bot → autenticar." },
+      ]},
+      { title: "Criar conta no Composio", steps: [
+        { type: "link", text: "Acesse app.composio.dev e crie uma conta", url: "https://app.composio.dev" },
+        { type: "info", text: "Após login, vá em Settings e anote a API Key (formato: ak_XXXXX)" },
+        { type: "info", text: "Anote a API Key no seu gerenciador de senhas" },
+      ]},
+      { title: "Como instalar qualquer ferramenta", steps: [
+        { type: "warning", text: "Sempre use 'Dedicated MCP Server' (tag LEGACY). Nunca 'Tool Router MCP' — ele é temporário e expira em horas." },
+        { type: "info", text: "1. No Composio → MCP Configs → + Create MCP Config → Dedicated MCP Server" },
+        { type: "info", text: "2. Selecione o app (Gmail, Calendar, Drive, Slack, etc)" },
+        { type: "info", text: "3. Auth Config Name: nome descritivo (ex: gmail-composio)" },
+        { type: "info", text: "4. Authentication Method: OAUTH2 (padrão). Scopes: deixar todos." },
+        { type: "info", text: "5. Clique em Create. Aguarde 1-2 minutos." },
+        { type: "info", text: "6. Copie a MCP URL e a API Key que aparecem" },
+        { type: "input", label: "Nome do MCP", placeholder: "ex: gmail-composio", key: "mcp_name" },
+        { type: "input", label: "MCP URL", placeholder: "https://backend.composio.dev/v3/mcp/...", key: "mcp_url" },
+        { type: "input", label: "API Key Composio", placeholder: "ak_XXXXX", key: "mcp_apikey" },
+        { type: "command_dynamic", label: "Adicionar na VPS", tpl: `python3 -c "\nimport json\nwith open('/home/assistente/.claude.json') as f:\n    data = json.load(f)\nfor key, proj in data.get('projects', {{}}).items():\n    if 'mcpServers' in proj:\n        proj['mcpServers']['{mcp_name}'] = {{\n            'type': 'http',\n            'url': '{mcp_url}',\n            'headers': {{\n                'x-api-key': '{mcp_apikey}'\n            }}\n        }}\nwith open('/home/assistente/.claude.json', 'w') as f:\n    json.dump(data, f, indent=2)\nprint('OK')\n"`, fb: `python3 -c "\nimport json\nwith open('/home/assistente/.claude.json') as f:\n    data = json.load(f)\nfor key, proj in data.get('projects', {}).items():\n    if 'mcpServers' in proj:\n        proj['mcpServers']['NOME-DO-MCP'] = {\n            'type': 'http',\n            'url': 'COLE_A_MCP_URL_AQUI',\n            'headers': {\n                'x-api-key': 'COLE_A_API_KEY_AQUI'\n            }\n        }\nwith open('/home/assistente/.claude.json', 'w') as f:\n    json.dump(data, f, indent=2)\nprint('OK')\n"`, req: "mcp_name" },
+        { type: "command_dynamic", label: "Verificar conexão", tpl: "claude mcp list 2>&1 | grep {mcp_name}", fb: "claude mcp list 2>&1 | grep NOME-DO-MCP", req: "mcp_name" },
+        { type: "command", label: "Reiniciar o bot", cmd: `tmux kill-session -t assistente 2>/dev/null\ntmux new-session -d -s assistente "while true; do cd ~/assistente-executivo && claude --dangerously-skip-permissions --channels plugin:telegram@claude-plugins-official; sleep 5; done"` },
+        { type: "info", text: "Na primeira vez que usar no Telegram, o bot envia um link de autenticação. Clique, autorize, pronto." },
+      ]},
+      { title: "Sugestões de ferramentas e testes", steps: [
+        { type: "info", text: "Gmail → Nome: gmail-composio → Teste: 'Me mostre os últimos 3 emails'" },
+        { type: "info", text: "Google Calendar → Nome: gcal-composio → Teste: 'O que tem na minha agenda amanhã?'" },
+        { type: "info", text: "Google Drive → Nome: gdrive-composio → Teste: 'Liste meus últimos documentos'" },
+        { type: "info", text: "Slack → Nome: slack-composio → Teste: 'Envie mensagem no Slack para #geral'" },
+        { type: "info", text: "LinkedIn → Nome: linkedin-composio → Teste: 'Publique um post no LinkedIn'" },
+      ]},
+      { title: "Obsidian", steps: [
+        { type: "info", text: "Conteúdo será adicionado em breve." },
+      ]},
+      { title: "Whisper (transcrição de voz)", steps: [
+        { type: "info", text: "Whisper transcreve áudios que você manda no Telegram. Custo: ~R$0,10 por minuto." },
+        { type: "link", text: "Acesse platform.openai.com e gere uma API key", url: "https://platform.openai.com/api-keys" },
+        { type: "info", text: "Configure billing (cobra por uso). Anote a key (sk-proj-XXXXX) no gerenciador de senhas." },
+        { type: "command", label: "Instalar biblioteca OpenAI", cmd: "pip3 install openai --break-system-packages" },
+        { type: "command", label: "Criar script de transcrição", cmd: `cd ~/assistente-executivo && cat > whisper_transcribe.py << 'SCRIPT'\n#!/usr/bin/env python3\nimport sys, os\nfrom openai import OpenAI\nclient = OpenAI(api_key=os.environ.get("OPENAI_API_KEY"))\ndef transcribe(filepath):\n    with open(filepath, "rb") as f:\n        result = client.audio.transcriptions.create(model="whisper-1", file=f, language="pt")\n    print(result.text)\nif __name__ == "__main__":\n    if len(sys.argv) < 2:\n        print("Uso: python3 whisper_transcribe.py <arquivo>")\n        sys.exit(1)\n    transcribe(sys.argv[1])\nSCRIPT` },
+        { type: "input", label: "API Key OpenAI", placeholder: "cole pra gerar o comando", key: "openai_key" },
+        { type: "command_dynamic", label: "Salvar API Key", tpl: `echo 'export OPENAI_API_KEY="{openai_key}"' >> ~/.bashrc && source ~/.bashrc`, fb: `echo 'export OPENAI_API_KEY="SUA_KEY_AQUI"' >> ~/.bashrc && source ~/.bashrc`, req: "openai_key" },
+        { type: "command", label: "Adicionar instruções ao CLAUDE.md", cmd: `cat >> ~/assistente-executivo/CLAUDE.md << 'EOF'\n\n## Transcrição de Áudio (Whisper)\n\nQuando receber um arquivo de áudio ou mensagem de voz:\n1. Salve o arquivo em /tmp/\n2. Se não for .mp3/.wav/.m4a, converta: ffmpeg -i /tmp/audio_input -ar 16000 -ac 1 /tmp/audio.mp3 -y\n3. Transcreva: python3 ~/assistente-executivo/whisper_transcribe.py /tmp/audio.mp3\n4. Responda com a transcrição e pergunte se quer que faça algo com o conteúdo\nEOF` },
+        { type: "command", label: "Reiniciar bot", cmd: `tmux kill-session -t assistente 2>/dev/null\ntmux new-session -d -s assistente "while true; do cd ~/assistente-executivo && source ~/.bashrc && claude --dangerously-skip-permissions --channels plugin:telegram@claude-plugins-official; sleep 5; done"` },
+        { type: "info", text: "Teste: mande um áudio de voz no Telegram. O bot deve transcrever e responder." },
+      ]},
+    ]}
+  },
+  { id: 5, icon: "5", title: "Commands", phase: "install", color: "#C4423D", bg: "#FDF0EF",
+    content: { type: "blocks", desc: "Atalhos que você digita no Telegram e o assistente executa o playbook completo.", blocks: [
+      { title: "O que são commands", steps: [
+        { type: "info", text: "Commands são atalhos. Você manda /briefing no Telegram e o assistente sabe exatamente o que fazer: acessar email, calendário, pendências e montar o briefing no formato que você quer." },
+        { type: "info", text: "Cada command é um arquivo .md na pasta .claude/commands/ da VPS. O arquivo contém as instruções completas do que o assistente deve fazer quando o command é chamado." },
+        { type: "info", text: "Você pode criar novos commands a qualquer momento pedindo pro próprio assistente." },
+      ]},
+      { title: "Instalar os 12 commands", steps: [
+        { type: "download", label: "Baixar todos os 12 commands (ZIP)", file: "commands.zip", desc: "/briefing /reuniao /braindump /analise /cenario /email /pesquisa /decisao /pendencias /feedback /ata /registra" },
+        { type: "info", text: "1. Baixe o ZIP acima" },
+        { type: "info", text: "2. Descompacte — são 12 arquivos .md" },
+        { type: "info", text: "3. Copie todos pra VPS na pasta ~/assistente-executivo/.claude/commands/" },
+        { type: "info", text: "4. Reinicie o assistente" },
+        { type: "command", label: "Verificar se os commands foram instalados", cmd: "ls ~/assistente-executivo/.claude/commands/" },
+      ]},
+      { title: "Lista de commands incluídos", steps: [
+        { type: "info", text: "/briefing — Emails priorizados + agenda + pendências + contexto do dia" },
+        { type: "info", text: "/reuniao — Pesquisa + histórico + briefing + pauta + perguntas estratégicas" },
+        { type: "info", text: "/braindump — Transcreve áudio, organiza por tema, registra na memória" },
+        { type: "info", text: "/analise — Analisa contrato, proposta, relatório ou currículo" },
+        { type: "info", text: "/cenario — Modela cenários base/otimista/pessimista com números" },
+        { type: "info", text: "/email — Rascunha email no tom certo, consulta aprendizados" },
+        { type: "info", text: "/pesquisa — Top 3-5 opções comparadas com recomendação" },
+        { type: "info", text: "/decisao — Registra decisão, checa contradições com anteriores" },
+        { type: "info", text: "/pendencias — Lista todas as pendências organizadas por urgência" },
+        { type: "info", text: "/feedback — Feedback estruturado SBI (construtivo ou reconhecimento)" },
+        { type: "info", text: "/ata — Ata de reunião com decisões e ações extraídas automaticamente" },
+        { type: "info", text: "/registra — Classifica e salva qualquer informação no arquivo certo da memória" },
+      ]},
+      { title: "Criar seus próprios commands", steps: [
+        { type: "info", text: "No Telegram, peça: 'Crie um command /[nome] que [descrição do que deve fazer]'" },
+        { type: "info", text: "O assistente cria o arquivo .md em .claude/commands/ automaticamente." },
+        { type: "info", text: "Exemplo: 'Crie um command /semanal que gere um resumo da semana com decisões, pendências e aprendizados'" },
+      ]},
+    ]}
+  },
+  { id: 6, icon: "6", title: "Memória", phase: "memory", color: "#C4423D", bg: "#FDF0EF",
+    content: { type: "blocks", desc: "Como o assistente lembra de tudo entre conversas.", blocks: [
+      { title: "Como a memória funciona", steps: [
+        { type: "info", text: "Cada vez que você manda mensagem no Telegram, o assistente inicia uma sessão. Quando a conversa acaba, tudo desaparece." },
+        { type: "info", text: "A memória resolve isso com arquivos markdown na VPS que o assistente lê e escreve automaticamente." },
+        { type: "info", text: "São dois documentos: um explica a arquitetura (como a memória funciona) e outro configura tudo automaticamente (crons, pastas, segurança)." },
+      ]},
+      { title: "Configurar a memória", steps: [
+        { type: "download", label: "Arquitetura de Memória do Assistente", file: "ARQUITETURA-MEMORIA-ASSISTENTE-PESSOAL.md", desc: "Documento completo: estrutura, ciclo de memória, regras e templates" },
+        { type: "download", label: "Configurações Técnicas", file: "CONFIGURACOES-TECNICAS.md", desc: "Crons de manutenção, pastas, permissões — o assistente executa tudo" },
+        { type: "info", text: "1. Baixe os dois documentos acima" },
+        { type: "info", text: "2. Faça upload de ambos na VPS para ~/assistente-executivo/" },
+        { type: "info", text: "3. No Telegram, peça ao assistente:" },
+        { type: "info", text: "'Leia os arquivos ARQUITETURA-MEMORIA-ASSISTENTE-PESSOAL.md e CONFIGURACOES-TECNICAS.md e execute todas as configurações: crie as pastas, os arquivos de memória, os scripts de manutenção, registre os crons e aplique as permissões de segurança.'" },
+        { type: "info", text: "4. O assistente cria tudo automaticamente. Os crons ficam registrados no sistema operacional (Ubuntu) e rodam mesmo quando o assistente não está ativo." },
+        { type: "command", label: "Verificar se criou as pastas", cmd: "find ~/assistente-executivo -type d | head -30" },
+        { type: "command", label: "Verificar se os crons foram registrados", cmd: "crontab -l" },
+      ]},
+      { title: "Testar a memória", steps: [
+        { type: "info", text: "1. Mande 'bom dia' no Telegram. Após configurar o CLAUDE.md, o assistente deve mencionar contexto ou pendências." },
+        { type: "info", text: "2. Diga 'decidi cancelar a reunião de quinta com o fornecedor X'. Feche a conversa." },
+        { type: "command", label: "Verificar se salvou a decisão", cmd: "cat ~/assistente-executivo/memoria/decisoes.md" },
+        { type: "info", text: "3. Espere 1h. Mande 'que decisões eu tomei hoje?'. Deve listar a decisão." },
+        { type: "info", text: "4. Peça pra rascunhar um email. Corrija o tom. No dia seguinte, peça outro email — deve vir no tom certo sem você pedir." },
+      ]},
+      { title: "Manutenção e evolução", steps: [
+        { type: "info", text: "A memória cresce com o uso. Os crons que você configurou fazem a limpeza automaticamente:" },
+        { type: "info", text: "Todo dia às 7h: verifica pendências atrasadas." },
+        { type: "info", text: "Toda segunda às 7h: arquiva pendências concluídas, rotaciona sessões antigas." },
+        { type: "info", text: "O assistente também faz manutenção inteligente: consolida aprendizados, move decisões antigas, limpa contexto semanal." },
+        { type: "info", text: "Você pode forçar a manutenção a qualquer momento mandando /manutencao no Telegram." },
+      ]},
+    ]}
+  },
+  { id: 7, icon: "7", title: "Dando vida ao assistente", phase: "memory", color: "#C4423D", bg: "#FDF0EF",
+    content: { type: "blocks", desc: "Preencher as 3 camadas de contexto e ativar o CLAUDE.md.", blocks: [
+      { title: "Camada 1: Quem é você", steps: [
+        { type: "download", label: "Instruções — Camada 1: Sobre você", file: "instrucao-camada1-sobre-voce.md", desc: "Perguntas guiadas para o Claude te ajudar a criar seu perfil" },
+        { type: "info", text: "1. Baixe o documento de instruções acima" },
+        { type: "info", text: "2. Abra o Claude (claude.ai) e faça upload" },
+        { type: "info", text: "3. O Claude vai te fazer perguntas uma por vez sobre: quem você é, como pensa, como decide, como lidera (~30 min)" },
+        { type: "info", text: "4. No final, peça pro Claude gerar o arquivo preenchido" },
+        { type: "info", text: "5. Suba pra VPS em ~/assistente-executivo/camada1-ceo/" },
+      ]},
+      { title: "Camada 2: Sua empresa", steps: [
+        { type: "download", label: "Instruções — Camada 2: Sobre a empresa", file: "instrucao-camada2-sobre-empresa.md", desc: "Perguntas guiadas sobre empresa, time, clientes, produtos" },
+        { type: "info", text: "1. Mesmo processo: upload no Claude → responder as perguntas → gerar arquivo" },
+        { type: "info", text: "2. Dica: se já tem documentos da empresa (organograma, produtos, etc), faça upload junto" },
+        { type: "info", text: "3. Suba pra VPS em ~/assistente-executivo/camada2-empresa/" },
+      ]},
+      { title: "Camada 3: Seu assistente", steps: [
+        { type: "download", label: "Instruções — Camada 3: Sobre o assistente", file: "instrucao-camada3-sobre-assistente.md", desc: "Perguntas para definir nome, personalidade e regras do assistente" },
+        { type: "info", text: "1. Preencha com o Claude: nome, personalidade, tom, regras de comportamento" },
+        { type: "info", text: "2. Suba pra VPS em ~/assistente-executivo/camada3-assistente/" },
+      ]},
+      { title: "Ativar o CLAUDE.md", steps: [
+        { type: "info", text: "1. Faça upload de TODOS os documentos das 3 camadas no Claude" },
+        { type: "info", text: "2. Peça: 'A partir desses documentos, crie o CLAUDE.md — o arquivo índice que vai ensinar o assistente a navegar todo esse contexto'" },
+        { type: "info", text: "3. O Claude vai gerar o índice semântico completo automaticamente" },
+        { type: "info", text: "4. Suba o CLAUDE.md pra ~/assistente-executivo/" },
+        { type: "command", label: "Reiniciar o assistente", cmd: `tmux kill-session -t assistente 2>/dev/null\ntmux new-session -d -s assistente "while true; do cd ~/assistente-executivo && claude --dangerously-skip-permissions --channels plugin:telegram@claude-plugins-official; sleep 5; done"` },
+        { type: "info", text: "5. Teste: mande uma mensagem no Telegram e compare a resposta com antes" },
+      ]},
+    ]}
+  },
+  { id: 8, icon: "8", title: "Uso no dia a dia", phase: "practice", color: "#C4423D", bg: "#FDF0EF",
+    content: { type: "lessons", lessons: [
+      { title: "Aula 13 — Briefing matinal", desc: "'Me dá o briefing do dia' → emails priorizados, agenda com contexto, pendências de ontem." },
+      { title: "Aula 14 — Preparar reunião", desc: "'Prepara minha reunião das 14h' → pesquisa empresa, puxa emails, briefing com pauta e perguntas." },
+      { title: "Aula 15 — Transcrever e organizar áudios", desc: "Brain dump de 2 minutos. O assistente organiza por tema, prioriza, registra na memória." },
+      { title: "Aula 16 — Analisar documentos", desc: "'Analisa esse contrato' + PDF → resumo, riscos, cláusulas desfavoráveis." },
+      { title: "Aula 17 — Modelar cenários", desc: "'Se eu contratar 3 pessoas a R$8k, qual o impacto no caixa?' → base/otimista/pessimista." },
+      { title: "Aula 18 — Rascunhar comunicações", desc: "'Rascunha email pro fornecedor, firme mas cordial' → pronto em 30 segundos." },
+      { title: "Aula 19 — Pesquisar e comparar", desc: "'Pesquisa restaurante japonês pra quinta, 4 pessoas' → 3 opções com avaliação." },
+      { title: "Aula 20 — Lembretes e vida pessoal", desc: "'Me lembra toda sexta de mandar flores' → lembretes recorrentes, agenda pessoal." },
+    ]}
+  },
+  { id: 9, icon: "9", title: "Grupo e tópicos no Telegram", phase: "practice", color: "#C4423D", bg: "#FDF0EF",
+    content: { type: "blocks", desc: "Forma avançada de organizar conversas com seu assistente por assunto.", blocks: [
+      { title: "Por que criar um grupo", steps: [
+        { type: "info", text: "No chat direto com o bot, todas as conversas ficam numa lista só: trabalho, pessoal, reuniões, tudo misturado." },
+        { type: "info", text: "Com um grupo com tópicos, você separa por assunto: Trabalho, Pessoal, Reuniões, Finanças, Time, etc." },
+        { type: "info", text: "O assistente responde em qualquer tópico. A memória funciona igual." },
+      ]},
+      { title: "Criar o grupo", steps: [
+        { type: "info", text: "1. No Telegram, crie um novo grupo" },
+        { type: "info", text: "2. Adicione o bot como membro (busque pelo username do bot)" },
+        { type: "info", text: "3. Vá em Configurações do grupo → Tópicos → Ativar" },
+        { type: "info", text: "4. Crie os tópicos que fizerem sentido pra você:" },
+        { type: "info", text: "Sugestões: Trabalho, Pessoal, Reuniões, Finanças, Time, Projetos, Ideias" },
+        { type: "info", text: "5. Promova o bot como administrador do grupo (necessário pra ele ler mensagens)" },
+      ]},
+      { title: "Dica", steps: [
+        { type: "info", text: "Você pode usar o chat direto pra coisas rápidas e o grupo com tópicos pra conversas mais longas ou organizadas." },
+        { type: "info", text: "O assistente responde nos dois. A memória é compartilhada." },
+      ]},
+    ]}
+  },
+  { id: 10, icon: "10", title: "Próximos passos", phase: "practice", color: "#C4423D", bg: "#FDF0EF",
+    content: { type: "lessons", lessons: [
+      { title: "Aula 22 — Seu plano de ação", desc: "Roteiro de 7 dias pra usar o assistente na rotina real. Como evoluir. O que vem no próximo nível." },
+    ]}
+  },
+  { id: 11, icon: "B1", title: "Viagens", phase: "bonus", color: "#C4423D", bg: "#FDF0EF",
+    content: { type: "lessons", lessons: [
+      { title: "Bônus 1 — Planejamento e pesquisa", desc: "Pesquisa de voos, hotéis comparados, roteiro montado pelo assistente." },
+      { title: "Bônus 2 — Reservas, check-in e lembretes", desc: "Check-in automático, lembretes antes da viagem, documentos organizados." },
+    ]}
+  },
+  { id: 12, icon: "B2", title: "50 casos de uso", phase: "bonus", color: "#C4423D", bg: "#FDF0EF",
+    content: { type: "blocks", desc: "40-50 cenários organizados por situação do dia a dia.", blocks: [
+      { title: "Guia de casos de uso", steps: [
+        { type: "download", label: "Guia completo — 50 casos de uso", file: "guia-50-casos-de-uso.pdf", desc: "Manhã, reuniões, análise, comunicação, pessoal, gestão" },
+      ]},
+    ]}
+  },
+  { id: 13, icon: "+", title: "Git: Obsidian + VPS", phase: "bonus", color: "#C4423D", bg: "#FDF0EF",
+    content: { type: "blocks", desc: "Sincronizar Obsidian do PC com a VPS via Git.", blocks: [
+      { title: "Configurar sincronização", steps: [
+        { type: "info", text: "Conteúdo será adicionado em breve." },
+      ]},
+    ]}
+  },
+];
+
+export { PHASES, MODULES };

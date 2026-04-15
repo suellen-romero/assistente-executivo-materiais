@@ -16,11 +16,12 @@ export default function DownloadButton({ label, file, desc }) {
           <line x1="12" y1="15" x2="12" y2="3" />
         </svg>
       </div>
-      <div className="flex-1">
-        <div className="text-[13px] font-semibold text-primary">{label}</div>
-        {desc && <div className="text-[11px] text-ink-subtle mt-px">{desc}</div>}
+      <div className="flex-1 min-w-0">
+        <div className="text-[13px] font-semibold text-primary leading-snug">{label}</div>
+        {desc && <div className="text-[11px] text-ink-subtle mt-0.5 leading-snug">{desc}</div>}
+        <div className="text-[10px] text-ink-tertiary mt-1 font-mono truncate sm:hidden">{file}</div>
       </div>
-      <div className="text-[11px] text-ink-tertiary flex-shrink-0">{file}</div>
+      <div className="text-[11px] text-ink-tertiary flex-shrink-0 hidden sm:block">{file}</div>
     </a>
   )
 }
