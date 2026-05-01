@@ -1,0 +1,5 @@
+{
+  "rewrites": [
+    { "source": "/assistente-executivo-materiais/:path*", "destination": "/:path*" }
+  ]
+}
