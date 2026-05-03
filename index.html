@@ -8,6 +8,39 @@
     <link rel="preconnect" href="https://fonts.googleapis.com" />
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
     <link href="https://fonts.googleapis.com/css2?family=League+Gothic&family=Raleway:wght@400;500;600;700&display=swap" rel="stylesheet" />
+    <script>
+      (function () {
+        var EXPECTED = 'mapsu123';
+        var KEY = 'mapsu_gate';
+        var stored = '';
+        try { stored = localStorage.getItem(KEY) || ''; } catch (e) {}
+        if (stored === EXPECTED) return;
+        document.documentElement.innerHTML =
+          '<head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1.0">' +
+          '<title>Acesso restrito — Materiais</title>' +
+          '<link rel="preconnect" href="https://fonts.googleapis.com">' +
+          '<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>' +
+          '<link href="https://fonts.googleapis.com/css2?family=Raleway:wght@400;500;600;700&display=swap" rel="stylesheet">' +
+          '<style>html,body{margin:0;padding:0;height:100%;font-family:Raleway,system-ui,sans-serif;background:linear-gradient(135deg,#fef8f0,#fdecd9 40%,#f9d8c4);color:#3a2a1f;}' +
+          '.wrap{min-height:100vh;display:flex;align-items:center;justify-content:center;padding:24px;}' +
+          '.card{background:rgba(255,255,255,0.85);backdrop-filter:blur(8px);border:1px solid rgba(217,167,123,0.4);border-radius:18px;box-shadow:0 14px 40px rgba(96,52,28,0.12);padding:36px 32px;max-width:380px;width:100%;}' +
+          '.title{font-size:22px;font-weight:700;text-align:center;margin:0 0 6px;letter-spacing:-0.01em;}' +
+          '.sub{font-size:14px;text-align:center;color:#7a5a44;margin:0 0 24px;line-height:1.5;}' +
+          'input{width:100%;box-sizing:border-box;padding:14px 16px;border:1px solid #d9b89c;border-radius:12px;background:#fff;font-size:15px;font-family:inherit;color:#3a2a1f;outline:none;transition:border-color .15s;}' +
+          'input:focus{border-color:#b8704a;box-shadow:0 0 0 3px rgba(184,112,74,0.15);}' +
+          'button{margin-top:14px;width:100%;padding:14px;border:0;border-radius:12px;background:#3a2a1f;color:#fef8f0;font-weight:600;font-size:15px;font-family:inherit;cursor:pointer;transition:background .15s;}' +
+          'button:hover{background:#1f1410;}' +
+          '.err{color:#9c2b1d;font-size:13px;text-align:center;margin-top:12px;min-height:18px;}' +
+          '</style></head>' +
+          '<body><div class="wrap"><form class="card" id="g"><h1 class="title">Materiais do Curso</h1>' +
+          '<p class="sub">Construa seu Assistente Executivo com IA</p>' +
+          '<input id="p" type="password" placeholder="Senha de acesso" autocomplete="off" autofocus>' +
+          '<button type="submit">Entrar</button>' +
+          '<div class="err" id="e"></div></form></div>' +
+          '<script>document.getElementById("g").addEventListener("submit",function(ev){ev.preventDefault();var v=document.getElementById("p").value;if(v==="mapsu123"){try{localStorage.setItem("mapsu_gate",v);}catch(e){}location.reload();}else{document.getElementById("e").textContent="Senha incorreta";document.getElementById("p").value="";}});<\/script>' +
+          '</body>';
+      })();
+    </script>
   </head>
   <body>
     <div id="root"></div>
